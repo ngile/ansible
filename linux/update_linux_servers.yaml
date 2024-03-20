@@ -42,4 +42,4 @@
       ansible.builtin.reboot:
       when: set_reboot
 
-  when: ansible_system == 'Linux'
+  # when: ansible_system == 'Linux'
