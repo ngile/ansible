@@ -38,8 +38,6 @@
         exclude: kernel*
       when: ansible_os_family == 'RedHat'
 
-    - name: "Reboot the machine when reboot={{ set_reboot }}"
+    - name: "Reboot the machine when set_reboot = true"
       ansible.builtin.reboot:
       when: set_reboot
-
-  # when: ansible_system == 'Linux'
