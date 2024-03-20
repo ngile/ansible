@@ -1,6 +1,10 @@
 ---
-- hosts: infrastructure
-  become: yes
+- name: Apply all OS updates
+  hosts: infrastructure
+  become: true
+  vars:
+    set_reboot: false
+    set_debug: false
   tasks:
     - name: Update all deb packages
       ansible.builtin.apt:
@@ -9,6 +13,23 @@
         upgrade: safe
       when: ansible_os_family == 'Debian'
 
+    - name: Check if system reboot is required
+      become: true
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: reboot_required
+      when: ansible_os_family == 'Debian'
+
+    - name: Debug /var/run/reboot-required
+      ansible.builtin.debug:
+        var: reboot_required
+      when: set_debug
+
+    - name: Reboot is required
+      ansible.builtin.debug:
+        msg: "Reboot is required" #todo: send msg to slack
+      when: reboot_required.stat.exists and ansible_os_family == 'Debian'
+
     - name: Update all rpm packages
       ansible.builtin.dnf:
         name: "*"
@@ -16,3 +37,9 @@
         state: latest
         exclude: kernel*
       when: ansible_os_family == 'RedHat'
+
+    - name: "Reboot the machine when reboot={{ set_reboot }}"
+      ansible.builtin.reboot:
+      when: set_reboot
+
+  when: ansible_system == 'Linux'
