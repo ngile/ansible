@@ -1,0 +1,18 @@
+---
+- name: Reboot machines
+  hosts: infrastructure
+  tasks:
+    - name: Reboot windows machines
+      become: true
+      ansible.windows.win_reboot:
+        reboot_timeout: 360
+      when: ansible_system == "Windows"
+      tags:
+        - windows
+
+    - name: Reboot linux machines
+      ansible.builtin.reboot:
+        reboot_timeout: 360
+      when: ansible_system == "Linux"
+      tags:
+        - linux
