@@ -1,0 +1,5 @@
+---
+- name: ansible_docker
+  version: main
+  scm: git
+  src: https://github.com/ngile/ansible_docker.git
