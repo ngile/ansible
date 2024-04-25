@@ -1,4 +1,4 @@
-$bridge_interface = `ip route | awk '/^default/ {printf $5}'`
+bridge_interface = `ip route | awk '/^default/ {printf $5}'`
 NW = "192.168.7."
 machines = {
   ctrlplane: "101",
@@ -19,7 +19,7 @@ Vagrant.configure("2") do |config|
     end
     machine_ip = NW + machines[:ctrlplane]
     node.vm.box = "debian/bookworm64"
-    node.vm.network "public_network", bridge: "#$bridge_interface", ip: machine_ip
+    node.vm.network "public_network", bridge: bridge_interface, ip: machine_ip
     node.vm.hostname = "ctrlplane-" + machines[:ctrlplane]
 
   end
@@ -33,7 +33,7 @@ Vagrant.configure("2") do |config|
 
       machine_ip = NW + item
       node.vm.box = "debian/bookworm64"
-      node.vm.network "public_network", bridge: "#$bridge_interface", ip: machine_ip
+      node.vm.network "public_network", bridge: bridge_interface, ip: machine_ip
       node.vm.hostname = "node-" + item
 
       if item == machines[:node][-1]
