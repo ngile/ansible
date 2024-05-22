@@ -8,18 +8,18 @@ machines = {
 
 Vagrant.configure("2") do |config|
 
-  config.vm.provider :virtualbox do |vb|
-    vb.customize ["modifyvm", :id, "--memory", "4096"]
-    vb.customize ["modifyvm", :id, "--cpus", "2"]
+  config.vm.provider :libvirt do |vb|
+    vb.memory = 4096
+    vb.cpus = 2
   end
 
   config.vm.define "ctrlplane-#{machines[:ctrlplane]}" do |node|
-    node.vm.provider :virtualbox do |vb|
-      vb.name = "[k8s] Control Plane: #{machines[:ctrlplane]}"
+    node.vm.provider :libvirt do |vb|
+      vb.default_prefix = ""
     end
     machine_ip = NW + machines[:ctrlplane]
     node.vm.box = "debian/bookworm64"
-    node.vm.network "public_network", bridge: bridge_interface, ip: machine_ip
+    node.vm.network "public_network", :dev => bridge_interface, ip: machine_ip
     node.vm.hostname = "ctrlplane-" + machines[:ctrlplane]
 
   end
@@ -27,13 +27,13 @@ Vagrant.configure("2") do |config|
   machines[:node].each do |item|
 
     config.vm.define "node-#{item}" do |node|
-      node.vm.provider :virtualbox do |vb|
-        vb.name = "[k8s] Node: #{item}"
+      node.vm.provider :libvirt do |vb|
+        vb.default_prefix = ""
       end
 
       machine_ip = NW + item
       node.vm.box = "debian/bookworm64"
-      node.vm.network "public_network", bridge: bridge_interface, ip: machine_ip
+      node.vm.network "public_network", :dev => bridge_interface, ip: machine_ip
       node.vm.hostname = "node-" + item
 
       if item == machines[:node][-1]

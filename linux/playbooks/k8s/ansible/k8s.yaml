@@ -33,7 +33,7 @@
               }
             - {
                 id: "DE15B14486CD377B9E876E1A234654DA9A296436",
-                url: "https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key",
+                url: "https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key",
                 asc: "/etc/apt/keyrings/kubernetes-apt-keyring.gpg",
               }
 
@@ -43,7 +43,7 @@
             state: present
           loop:
             - "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/{{ ansible_distribution|lower }} {{ ansible_distribution_release }} stable"
-            - "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /"
+            - "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /"
 
         - name: Update Package Cache
           apt:
@@ -64,6 +64,13 @@
             regexp: "^{{ hostvars[item]['ansible_facts']['eth1']['ipv4']['address'] }}"
             line: "{{ hostvars[item]['ansible_facts']['eth1']['ipv4']['address'] }} {{ item }}"
           loop: "{{ groups['all'] }}"
+
+      rescue:
+        - debug:
+            var: "{{ item }}"
+          loop:
+            - "{{ groups['all'] }}"
+            - "{{ hostvars }}"
 
       when: ansible_os_family == 'Debian'
       tags:
@@ -158,12 +165,11 @@
             join_command: "{{ join_command_raw.stdout_lines[0] }}"
 
       rescue:
-        - name: Remove k8s if kubeadm init fails
-          ansible.builtin.command: kubeadm reset
-          when: ansible_failed_task.name == 'Setup k8s with kubeadm'
-
         - debug:
-            var: kubeadm_status
+            var: "{{ item }}"
+          loop:
+            - kubeadm_status
+            - kubectl_file
 
       when: ansible_hostname is regex("^ctrlplane")
       tags:
@@ -177,6 +183,12 @@
       block:
         - name: Join cluster
           shell: "{{ hostvars['ctrlplane-101'].join_command }}"
+          register: join_cmd_output
+
+      rescue:
+        - name: Debug join clusterm jmd
+          debug:
+            var: join_cmd_output
       when: ansible_hostname is regex("^node.*")
       tags:
         - always
